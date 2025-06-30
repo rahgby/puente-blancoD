@@ -23,7 +23,7 @@ public class TipoDocumento extends AudityEntity {
     private String nombre;
 
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
-    private Boolean estable = true;
+    private Boolean estado = true;
 
     @CreationTimestamp
     @Column(name = "fecha_creacion", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
