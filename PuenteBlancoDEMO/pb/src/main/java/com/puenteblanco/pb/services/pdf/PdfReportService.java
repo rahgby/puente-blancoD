@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.awt.image.BufferedImage;
 
@@ -228,6 +229,55 @@ public class PdfReportService {
         document.add(table);
         document.add(Chunk.NEWLINE);
 
+        // Gráfico adaptativo según diversidad de tipos de mascota
+try {
+    Map<String, Long> agrupado;
+
+    Set<String> tiposMascotaUnicos = datos.stream()
+        .map(CitaPorMascotaDTO::getTipoMascota)
+        .collect(Collectors.toSet());
+
+    if (tiposMascotaUnicos.size() > 1) {
+        // Si hay varios tipos, mostrar gráfico por tipo
+        agrupado = datos.stream()
+            .collect(Collectors.groupingBy(CitaPorMascotaDTO::getTipoMascota, Collectors.counting()));
+
+        BufferedImage grafico = ChartGeneratorConfig.generarGraficoBarras(
+            agrupado,
+            "Cantidad de Citas por Tipo de Mascota",
+            "Tipo de Mascota",
+            "Cantidad"
+        );
+
+        Image chartImage = Image.getInstance(grafico, null);
+        chartImage.setAlignment(Element.ALIGN_CENTER);
+        chartImage.scaleToFit(450, 280);
+        document.add(chartImage);
+    } else {
+        // Si solo hay un tipo (Perro o Gato), mostrar gráfico por servicio
+        agrupado = datos.stream()
+            .collect(Collectors.groupingBy(CitaPorMascotaDTO::getServicio, Collectors.counting()));
+
+        String titulo2 = "Servicios brindados a " + tiposMascotaUnicos.iterator().next();
+
+        BufferedImage grafico = ChartGeneratorConfig.generarGraficoBarras(
+            agrupado,
+            titulo2,
+            "Servicio",
+            "Cantidad"
+        );
+
+        Image chartImage = Image.getInstance(grafico, null);
+        chartImage.setAlignment(Element.ALIGN_CENTER);
+        chartImage.scaleToFit(450, 280);
+        document.add(chartImage);
+    }
+} catch (Exception e) {
+    System.err.println("Error al generar gráfico de citas por mascota: " + e.getMessage());
+}
+
+        document.add(Chunk.NEWLINE);
+
         Paragraph nota = new Paragraph("Reporte generado automáticamente por el sistema", noteFont);
         nota.setAlignment(Element.ALIGN_RIGHT);
         document.add(nota);
@@ -327,6 +377,26 @@ public class PdfReportService {
 
             document.add(table);
             document.add(Chunk.NEWLINE);
+
+            // Gráfico por tipo de servicio
+try {
+    Map<String, Long> agrupado = datos.stream()
+        .collect(Collectors.groupingBy(CitaCanceladaDTO::getServicio, Collectors.counting()));
+
+    BufferedImage grafico = ChartGeneratorConfig.generarGraficoBarras(
+        agrupado,
+        "Citas Canceladas por Tipo de Servicio",
+        "Servicio",
+        "Cantidad"
+    );
+
+    Image chartImage = Image.getInstance(grafico, null);
+    chartImage.setAlignment(Element.ALIGN_CENTER);
+    chartImage.scaleToFit(450, 280);
+    document.add(chartImage);
+} catch (Exception e) {
+    System.err.println("Error al generar gráfico de citas canceladas: " + e.getMessage());
+}
 
             // Nota final
             Paragraph nota = new Paragraph("Reporte generado automáticamente por el sistema", noteFont);
