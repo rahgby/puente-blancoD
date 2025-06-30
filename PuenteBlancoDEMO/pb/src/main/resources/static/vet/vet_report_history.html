@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Historial de Reportes Generados</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+  <!-- Barra superior -->
+  <header class="bg-blue-900 text-white py-4 px-6 flex justify-between items-center w-full">
+    <h1 class="text-xl font-bold">Clínica y Veterinaria Puente Blanco</h1>
+    <span>Historial de Reportes</span>
+  </header>
+
+  <div class="flex flex-1">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gray-800 text-white flex flex-col justify-between min-h-full">
+      <nav class="flex flex-col p-4 space-y-4">
+        <a href="/vet/veterinarian_dashboard.html" class="hover:text-blue-300 flex items-center gap-2"><i class="fa-solid fa-table-columns"></i> Dashboard</a>
+        <a href="/vet/veterinarian_reports.html" class="hover:text-blue-300 flex items-center gap-2"><i class="fa-solid fa-chart-pie"></i> Reportes</a>
+        <a href="/vet/veterinarian_report_history.html" class="text-blue-300 flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left"></i> Historial de Reportes</a>
+      </nav>
+      <button onclick="logout()" class="m-4 flex items-center justify-center gap-2 bg-gray-100 text-red-500 px-4 py-2 rounded hover:bg-gray-200">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesión
+      </button>
+    </aside>
+
+    <!-- Contenido -->
+    <main class="flex-1 p-6 space-y-6">
+      <h2 class="text-2xl font-semibold text-gray-800 mb-4"><i class="fa-solid fa-file-alt mr-2"></i> Reportes Generados</h2>
+
+      <div class="overflow-x-auto bg-white p-4 rounded shadow">
+        <table class="min-w-full text-sm text-left text-gray-700">
+          <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+            <tr>
+              <th class="px-6 py-3">Tipo de Reporte</th>
+              <th class="px-6 py-3">Parámetros</th>
+              <th class="px-6 py-3">Fecha de Generación</th>
+              <th class="px-6 py-3">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tablaHistorialReportes">
+            <tr><td colspan="4" class="text-center py-4 text-gray-500 italic">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const res = await fetch("/api/vet/reports/history", { credentials: 'include' });
+    const data = await res.json();
+
+    const tabla = document.getElementById("tablaHistorialReportes");
+    tabla.innerHTML = "";
+
+    if (!data.length) {
+      tabla.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500 italic">No hay reportes generados.</td></tr>`;
+      return;
+    }
+
+    data.forEach(rep => {
+      const fila = document.createElement("tr");
+      fila.innerHTML = `
+        <td class="px-6 py-4">${rep.tipoReporte}</td>
+        <td class="px-6 py-4">${rep.parametros}</td>
+        <td class="px-6 py-4">${new Date(rep.fechaGeneracion).toLocaleString()}</td>
+        <td class="px-6 py-4">
+          <a href="/storage/reportes/${rep.nombreArchivo}" 
+             class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-semibold" 
+             download>
+            <i class="fa-solid fa-download mr-1"></i> Descargar
+          </a>
+        </td>
+      `;
+      tabla.appendChild(fila);
+    });
+  } catch (e) {
+    console.error("Error al cargar historial:", e);
+    document.getElementById("tablaHistorialReportes").innerHTML =
+      `<tr><td colspan="4" class="text-center py-4 text-red-500">No se pudo cargar el historial.</td></tr>`;
+  }
+});
+
+function logout() {
+  document.cookie = "jwt=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax";
+  window.location.href = "/";
+}
+</script>
+
+</body>
+</html>
